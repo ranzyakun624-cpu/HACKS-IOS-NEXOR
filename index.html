@@ -248,12 +248,46 @@
   .topbar-left{ display:flex; align-items:center; gap:10px; }
   .topbar-logo{ width:32px; height:32px; filter:drop-shadow(0 0 12px rgba(255,255,255,.06)); }
   .topbar-word{ font-family:var(--font-serif); font-size:13.5px; font-weight:600; letter-spacing:.22em; color:var(--text); }
+
+  /* ─── GABUNGAN STATUS CHIP + JOIN CHANNEL ─── */
+  .topbar-right{
+    display:flex; align-items:center; gap:12px;
+  }
   .status-chip{
     display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--border);
     padding:6px 11px 6px 9px; border-radius:100px; font-size:12px; font-weight:600; color:var(--text-dim);
   }
   .dot-pulse{ width:7px; height:7px; border-radius:50%; background:#aaa; box-shadow:0 0 8px rgba(255,255,255,.15); animation:pulse 1.6s infinite; }
   @keyframes pulse{ 0%,100%{ opacity:1;} 50%{ opacity:.35;} }
+
+  /* ─── TOMBOL JOIN CHANNEL ─── */
+  .join-channel-btn{
+    display:flex; align-items:center; gap:6px;
+    background:linear-gradient(90deg,#333,#555);
+    padding:6px 14px 6px 12px;
+    border-radius:100px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+    letter-spacing:.08em;
+    text-decoration:none;
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 0 16px rgba(255,255,255,.04);
+    transition:all .2s ease;
+    cursor:pointer;
+    font-family:var(--font-d);
+  }
+  .join-channel-btn:hover{
+    background:linear-gradient(90deg,#555,#888);
+    box-shadow:0 0 24px rgba(255,255,255,.08);
+    transform:scale(1.02);
+  }
+  .join-channel-btn:active{
+    transform:scale(.95);
+  }
+  .join-channel-btn svg{
+    width:14px; height:14px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+  }
 
   .section{ padding:6px 20px 0; }
   .section-title{
@@ -544,7 +578,17 @@
           </svg>
           <div class="topbar-word">XPRO NXR</div>
         </div>
-        <div class="status-chip"><div class="dot-pulse"></div>ONLINE</div>
+
+        <!-- ─── RIGHT SIDE: STATUS CHIP + JOIN CHANNEL ─── -->
+        <div class="topbar-right">
+          <div class="status-chip"><div class="dot-pulse"></div>ONLINE</div>
+
+          <!-- TOMBOL JOIN SALURAN NXRPLOIT -->
+          <a href="https://whatsapp.com/channel/0029Vb7dF6H7j6fzOwDFFD3u" class="join-channel-btn" id="joinChannelBtn">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            JOIN SALURAN NXRPLOIT
+          </a>
+        </div>
       </div>
 
       <div class="section">
@@ -901,5 +945,23 @@ document.querySelectorAll('.game-opt').forEach(opt=>{
   });
 });
 </script>
+
+<script>
+(function () {
+  const btn = document.getElementById('joinChannelBtn');
+  if (!btn) return;
+
+  btn.addEventListener('click', function (e) {
+    e.preventDefault();
+    const url = 'https://whatsapp.com/channel/0029Vb7dF6H7j6fzOwDFFD3u';
+    try {
+      window.location.assign(url);
+    } catch (_) {
+      window.location.href = url;
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
