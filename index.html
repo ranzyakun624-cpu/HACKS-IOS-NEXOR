@@ -830,23 +830,66 @@ function getDeviceId(){ let id=localStorage.getItem('nexor_device_id'); if(!id){
 document.getElementById('btnLogin').addEventListener('click', async ()=>{
   sndClick();
   const u=document.getElementById('inpUser').value.trim();
-  const k=document.getElementById('inpKey').value.trim();
-  const err=document.getElementById('loginError'); const btn=document.getElementById('btnLogin');
-  if(!k){ err.textContent='Enter license key.'; err.classList.add('show'); return; }
-  btn.disabled=true; const orig=btn.textContent; btn.textContent='VERIFYING…';
+  const k=document.getElementById('inpKey').value.trim().toUpperCase();
+  const err=document.getElementById('loginError');
+  const btn=document.getElementById('btnLogin');
+
+  if(!k){
+    showLoginError('Masukkan license key.');
+    return;
+  }
+
+  btn.disabled=true;
+  const originalText=btn.textContent;
+  btn.textContent='MEMERIKSA...';
+
   try{
-    const {data,error}=await sb.from('licenses').select('*').eq('license_key',k).maybeSingle();
-    if(error) throw error;
-    if(!data){ err.textContent='Key not found.'; err.classList.add('show'); return; }
-    if(data.status==='banned'){ err.textContent='Key banned.'; err.classList.add('show'); return; }
-    const devId=getDeviceId();
-    if(!data.device_id){ await sb.from('licenses').update({device_id:devId, status:'active', username:u||data.username}).eq('id',data.id); }
-    else if(data.device_id!==devId){ err.textContent='Key used on another device.'; err.classList.add('show'); return; }
-    else if(data.status!=='active'){ err.textContent='Key inactive.'; err.classList.add('show'); return; }
-    err.classList.remove('show'); sndSuccess();
-    setTimeout(()=>{ showPanel('panel-main'); startLiveStats(); }, 200);
-  }catch(e){ console.error(e); err.textContent='Server error.'; err.classList.add('show'); }
-  finally{ btn.disabled=false; btn.textContent=orig; }
+    const {data:activated,error}=await sb.rpc('activate_license',{
+      p_license_key:k,
+      p_device_id:getDeviceId(),
+      p_username:u||null,
+      p_installation_id:null,
+      p_product_id:'webclip'
+    });
+
+    if(error){
+      console.error('activate_license RPC error:',error);
+      const message=String(error.message||'');
+      if(error.code==='PGRST202'||message.toLowerCase().includes('could not find the function')){
+        showLoginError('Fungsi aktivasi belum tersedia. Periksa SQL activate_license dan reload schema Supabase.');
+      }else if(message.includes('device_id')||message.includes('installation_id')){
+        showLoginError('Kolom perangkat belum tersedia di tabel licenses.');
+      }else{
+        showLoginError(`Gagal verifikasi (${error.code||'Supabase'}): ${message||'Periksa koneksi dan konfigurasi.'}`);
+      }
+      return;
+    }
+
+    if(activated!==true){
+      showLoginError('Key tidak valid, kedaluwarsa, diblokir, atau terikat ke perangkat lain.');
+      return;
+    }
+
+    err.classList.remove('show');
+    sndSuccess();
+    setTimeout(()=>{ showPanel('panel-main'); startLiveStats(); },200);
+  }catch(e){
+    console.error(e);
+    showLoginError('Gagal terhubung ke server. Coba lagi.');
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalText;
+  }
+
+  function showLoginError(message){
+    err.textContent=message;
+    err.classList.add('show');
+    const card=document.querySelector('.login-card');
+    card.classList.remove('shake');
+    void card.offsetWidth;
+    card.classList.add('shake');
+    tone(220,0.18,'square',0.1);
+  }
 });
 
 /* ===================== LIVE STATS ===================== */
