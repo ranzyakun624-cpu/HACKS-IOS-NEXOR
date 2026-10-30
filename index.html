@@ -844,19 +844,29 @@ document.getElementById('btnLogin').addEventListener('click', async ()=>{
   btn.textContent='MEMERIKSA...';
 
   try{
-    const {data:activated,error}=await sb.rpc('activate_license',{
+    const rpcArgs={
       p_license_key:k,
       p_device_id:getDeviceId(),
       p_username:u||null,
-      p_installation_id:null,
+      p_installation_id:null
+    };
+    let result=await sb.rpc('activate_license',{
+      ...rpcArgs,
       p_product_id:'webclip'
     });
+
+    // Older deployed Supabase projects may still expose the four-argument RPC.
+    if(result.error?.code==='PGRST202'){
+      result=await sb.rpc('activate_license',rpcArgs);
+    }
+
+    const {data:activated,error}=result;
 
     if(error){
       console.error('activate_license RPC error:',error);
       const message=String(error.message||'');
       if(error.code==='PGRST202'||message.toLowerCase().includes('could not find the function')){
-        showLoginError('Fungsi aktivasi belum tersedia. Periksa SQL activate_license dan reload schema Supabase.');
+        showLoginError('RPC aktivasi tidak ditemukan. Periksa konfigurasi Supabase atau reload schema, lalu coba lagi.');
       }else if(message.includes('device_id')||message.includes('installation_id')){
         showLoginError('Kolom perangkat belum tersedia di tabel licenses.');
       }else{
